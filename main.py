@@ -25,7 +25,7 @@ class MyApp(QWidget):
         self.api_data_display = None
         self.init_ui()
 
-    # noinspection PyUnresolvedReferences
+
     def init_ui(self):
         self.resize(500, 600)
 
@@ -68,7 +68,7 @@ class MyApp(QWidget):
         self.save_btn.setEnabled(True)
         self.edit_btn.setEnabled(False)
 
-    # noinspection PyUnresolvedReferences
+
     def setup_api_key_section(self, parent_layout: QVBoxLayout) -> None:
         api_key_layout = QHBoxLayout()
         self.api_key_input = QLineEdit(self)
@@ -87,8 +87,6 @@ class MyApp(QWidget):
 
     @staticmethod
     def parse_devices(file_path: str) -> list:
-        # Implement parsing logic here
-        # Example: Return a list of devices
         with open(file_path, 'r') as f:
             return sorted(set([line.strip().upper() for line in f.readlines()]))
 
@@ -104,16 +102,12 @@ class MyApp(QWidget):
 
     @staticmethod
     def generate_date_log():
-        # Get the current system locale
         user_locale = locale.getlocale()[0]
-        # Get the current date and time
         now = datetime.now()
-        # Format the datetime based on the user's locale
         formatted_date = format_datetime(now, locale=user_locale)
         return f"[{formatted_date}]"
 
     def get_package_data(self):
-        # Placeholder for API call to get data
         package_name = self.package_name_input.text()
         parsed_package_name = "%20".join(package_name.split(" "))
         try:
@@ -130,9 +124,9 @@ class MyApp(QWidget):
             self.api_data_display.setText(f"{MyApp.generate_date_log()}\nAPI Data for package: \n{package_dict}")
 
         except req.exceptions.HTTPError as http_err:
-            print(f'HTTP error occurred: {http_err}')  # HTTP error (e.g., 404, 501, ...)
+            print(f'HTTP error occurred: {http_err}')
         except Exception as err:
-            print(f'An error occurred: {err}')  # Other errors (e.g., network issues)
+            print(f'An error occurred: {err}')
 
     def deploy(self):
         if len(self.final_package) <= 0 or self.final_package == '':
@@ -151,9 +145,9 @@ class MyApp(QWidget):
                 self.create_request(method='POST', url=final_url)
                 self.api_data_display.append(f"{MyApp.generate_date_log()}\nRequest sent to PDQ")
             except req.exceptions.HTTPError as http_err:
-                print(f'HTTP error occurred: {http_err}')  # HTTP error (e.g., 404, 501, ...)
+                print(f'HTTP error occurred: {http_err}')
             except Exception as err:
-                print(f'An error occurred: {err}')  # Other errors (e.g., network issues)
+                print(f'An error occurred: {err}')
 
     def get_devices_from_pdq(self, list_of_devices: list) -> list:
         result_device_list = []
@@ -185,18 +179,18 @@ class MyApp(QWidget):
                 response.raise_for_status()
                 result_data = response.json()
             except req.exceptions.HTTPError as http_err:
-                print(f'HTTP error occurred: {http_err}')  # HTTP error (e.g., 404, 501, ...)
+                print(f'HTTP error occurred: {http_err}')
             except Exception as err:
-                print(f'An error occurred: {err}')  # Other errors (e.g., network issues)
+                print(f'An error occurred: {err}')
         elif method == 'POST':
             try:
                 response = req.post(url=url, headers=headers, data=data)
                 response.raise_for_status()
                 result_data = dict(success=True)
             except req.exceptions.HTTPError as http_err:
-                print(f'HTTP error occurred: {http_err}')  # HTTP error (e.g., 404, 501, ...)
+                print(f'HTTP error occurred: {http_err}')
             except Exception as err:
-                print(f'An error occurred: {err}')  # Other errors (e.g., network issues)
+                print(f'An error occurred: {err}')
 
         return result_data
 
