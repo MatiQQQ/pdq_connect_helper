@@ -23,6 +23,7 @@ class MyApp(QWidget):
         self.get_data_btn = None
         self.deploy_btn = None
         self.api_data_display = None
+        self.broken_devices_list = []
         self.init_ui()
 
 
@@ -133,14 +134,19 @@ class MyApp(QWidget):
             self.api_data_display.append(
                 f"{MyApp.generate_date_log()}\nDeployment cannot be done because no package or no devices")
         else:
-            print(f"{MyApp.generate_date_log()}\nPreparing Deployment...")
+            self.api_data_display.append(f"{MyApp.generate_date_log()}\nPreparing Deployment...")
             parsed_devices = "".join(
                 [f"{index + 1}: {device[0]} {device[1]}\n" for index, device in enumerate(self.final_devices)])
+
             url_list_of_devices = "".join([f"{device[1]}%2C" for device in self.final_devices]).removesuffix("%2C")
             final_url = f"https://app.pdq.com/v1/api/deployments?package={self.final_package}&targets={url_list_of_devices}"
-            print(final_url)
             self.api_data_display.append(f"{MyApp.generate_date_log()}\nDeploying to listed devices...")
             self.api_data_display.append(parsed_devices)
+            if len(self.broken_devices_list) > 0:
+                parsed_broken_devices = "".join(
+                    [f"{index + 1}: {device}\n" for index, device in enumerate(self.broken_devices_list)])
+                self.api_data_display.append(f"{MyApp.generate_date_log()}\nBroken devices:\n")
+                self.api_data_display.append(parsed_broken_devices)
             try:
                 self.create_request(method='POST', url=final_url)
                 self.api_data_display.append(f"{MyApp.generate_date_log()}\nRequest sent to PDQ")
@@ -149,21 +155,32 @@ class MyApp(QWidget):
             except Exception as err:
                 print(f'An error occurred: {err}')
 
-    def get_devices_from_pdq(self, list_of_devices: list) -> list:
+    def get_device_with_time(self, devices: list , req_time: float =0.5, sleep_time: int =0) -> list:
         result_device_list = []
-        for device in list_of_devices:
+        for index, device in enumerate(devices):
+            if index != 0 and index % 25 == 0:
+                sleep(sleep_time)
             try:
                 get_device_req = self.create_request(
-                    url=f'https://app.pdq.com/v1/api/devices?includes=networking%2Cprocessors&pageSize=50&page=1&sort=insertedAt&filter%5Bhostname%5D=~{device}')
+                    url=f'https://app.pdq.com/v1/api/devices?includes=networking%2Cprocessors&pageSize=50&page=1&sort=insertedAt&filter%5Bname%5D=~{device}')
                 device_id = get_device_req['data'][0]['id']
-                result_device_list.append(f"{device} ({device_id})")
+                result_device_list.append(f"{index + 1}. {device} ({device_id})")
                 self.final_devices.append((device, device_id))
             except Exception as e:
-                print('An error occurred j', e)
+                print('An error occurred j', e, device)
+                self.broken_devices_list.append(device)
                 continue
-            sleep(0.5)
+            sleep(req_time)
         return result_device_list
+    def get_devices_from_pdq(self, list_of_devices: list) -> list:
+        if len(list_of_devices) <= 30:
+            result_devices_list = self.get_device_with_time(list_of_devices)
+        elif 30 <= len(list_of_devices) <= 50:
+            result_devices_list = self.get_device_with_time(list_of_devices, req_time=3, sleep_time=80)
+        else:
+            result_devices_list = self.get_device_with_time(list_of_devices, req_time=5, sleep_time=0)
 
+        return result_devices_list
     def create_request(self, url: str = '', data: str = '', method: str = 'GET') -> dict | None:
         result_data = ''
         headers = {
