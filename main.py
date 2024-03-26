@@ -113,7 +113,7 @@ class MyApp(QWidget):
         parsed_package_name = "%20".join(package_name.split(" "))
         try:
             package_response = self.create_request(
-                url=f"https://app.pdq.com/v1/api/packages?pageSize=50&page=1&sort=nameDesc&filter%5Bname%5D=~{parsed_package_name}")
+                url=f"https://app.pdq.com/v1/api/packages?pageSize=50&page=1&sort=nameDesc&filter%5Bname%5D={parsed_package_name}")
             package_data = package_response['data'][0]
             package_name_pdq = package_data['name']
             package_id_pdq = package_data['id']
