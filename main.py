@@ -130,6 +130,7 @@ class MyApp(QWidget):
             print(f'An error occurred: {err}')
 
     def deploy(self):
+        list_of_urls = []
         if len(self.final_package) <= 0 or self.final_package == '':
             self.api_data_display.append(
                 f"{MyApp.generate_date_log()}\nDeployment cannot be done because no package or no devices")
@@ -138,8 +139,10 @@ class MyApp(QWidget):
             parsed_devices = "".join(
                 [f"{index + 1}: {device[0]} {device[1]}\n" for index, device in enumerate(self.final_devices)])
 
-            url_list_of_devices = "".join([f"{device[1]}%2C" for device in self.final_devices]).removesuffix("%2C")
-            final_url = f"https://app.pdq.com/v1/api/deployments?package={self.final_package}&targets={url_list_of_devices}"
+            for i in range(0,len(self.final_devices), 30):
+                url_list_of_devices = "".join([f"{device[1]}%2C" for device in self.final_devices[i:i+30]]).removesuffix("%2C")
+                final_url = f"https://app.pdq.com/v1/api/deployments?package={self.final_package}&targets={url_list_of_devices}"
+                list_of_urls.append(final_url)
             self.api_data_display.append(f"{MyApp.generate_date_log()}\nDeploying to listed devices...")
             self.api_data_display.append(parsed_devices)
             if len(self.broken_devices_list) > 0:
@@ -147,13 +150,15 @@ class MyApp(QWidget):
                     [f"{index + 1}: {device}\n" for index, device in enumerate(self.broken_devices_list)])
                 self.api_data_display.append(f"{MyApp.generate_date_log()}\nBroken devices:\n")
                 self.api_data_display.append(parsed_broken_devices)
-            try:
-                self.create_request(method='POST', url=final_url)
-                self.api_data_display.append(f"{MyApp.generate_date_log()}\nRequest sent to PDQ")
-            except req.exceptions.HTTPError as http_err:
-                print(f'HTTP error occurred: {http_err}')
-            except Exception as err:
-                print(f'An error occurred: {err}')
+            for index, url in enumerate(list_of_urls):
+                try:
+                    self.create_request(method='POST', url=url)
+                    self.api_data_display.append(f"{MyApp.generate_date_log()}\n{index+1}. Request sent to PDQ")
+                except req.exceptions.HTTPError as http_err:
+                    print(f'HTTP error occurred: {http_err}')
+                except Exception as err:
+                    print(f'An error occurred: {err}')
+                sleep(5)
 
     def get_device_with_time(self, devices: list , req_time: float =0.5, sleep_time: int =0) -> list:
         result_device_list = []
